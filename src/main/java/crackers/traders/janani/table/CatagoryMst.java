@@ -8,11 +8,15 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Entity
 @Table(name="catagory_mst")
+@AllArgsConstructor
+@NoArgsConstructor
 public class CatagoryMst {
 	
 	@Id

@@ -1,5 +1,6 @@
 package crackers.traders.janani.controller;
 
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import crackers.traders.janani.entity.ParamEntity;
 import crackers.traders.janani.service.CrackersService;
+import crackers.traders.janani.table.CatagoryMst;
+import crackers.traders.janani.table.SupplierMst;
 
 @CrossOrigin
 @Controller
@@ -27,11 +30,25 @@ public class BillingController {
 	}
 	@RequestMapping("/insertCatagory")
 	@ResponseBody
-	public String insertCatagory(@RequestBody ParamEntity entity) {
-		if(crackerService.findByCatagoryName(entity.getCatagoryName())) {
-			return "exist";
-		} else {
+	public Object insertCatagory(@RequestBody ParamEntity entity) {
 			return crackerService.insertCatagoryData(entity);
-		}
+	}
+	
+	@RequestMapping("/insertSupplier")
+	@ResponseBody
+	public Object insertSupplier(@RequestBody ParamEntity entity) {
+			return crackerService.insertSupplierData(entity);
+	}
+	
+	@RequestMapping("/searchCatgoryData")
+	@ResponseBody
+	public List<CatagoryMst> searchCatgoryData(@RequestBody ParamEntity entity) {
+		return crackerService.searchCatagoryData(entity.getCatagoryName());
+	}
+	
+	@RequestMapping("/searchSupplierData")
+	@ResponseBody
+	public List<SupplierMst> searchSupplierData(@RequestBody ParamEntity entity) {
+		return crackerService.searchSupplierData(entity.getSupplierName());
 	}
 }

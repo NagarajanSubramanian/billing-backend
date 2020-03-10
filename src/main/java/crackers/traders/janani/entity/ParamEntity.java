@@ -1,6 +1,10 @@
 package crackers.traders.janani.entity;
 
 import java.sql.Date;
+import java.time.ZonedDateTime;
+import java.util.UUID;
+
+import javax.persistence.Column;
 
 import lombok.Data;
 
@@ -9,7 +13,7 @@ public class ParamEntity {
 	
 	private String mode;
 	
-	private String catagoryId;
+	private UUID catagoryId;
 	
 	private String catagoryName;
 	
@@ -23,10 +27,33 @@ public class ParamEntity {
 	
 	private String createdUser;
 	
-	private Date createdDate;
+	private ZonedDateTime createdDate;
 	
 	private String updatedUser;
 	
-	private Date updatedDate;
+	private ZonedDateTime updatedDate;
+	
+	
+	public UUID supplierId;
+	
+	public String supplierName;
+	
+	public String supplierShortName;
+	
+	public String supplierAddress;
+	
+	public String supplierCity;
+	
+	public int supplierPincode;
+	
+	public int supplierPhoneno;
+	
+	public String supplierEmail;
+	
+	public String supplierTin;
+	
+	public String supplierCst;
+	
+	public String supplierPan;
 	
 }

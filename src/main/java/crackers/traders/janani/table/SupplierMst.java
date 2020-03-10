@@ -8,8 +8,15 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
 @Entity
 @Table(name="supplier_mst")
+@AllArgsConstructor
+@NoArgsConstructor
 public class SupplierMst {
 	
 	@Id
@@ -25,6 +32,9 @@ public class SupplierMst {
 	@Column(name="supplier_address")
 	public String supplierAddress;
 	
+	@Column(name="supplier_city")
+	public String supplierCity;
+	
 	@Column(name="supplier_pincode")
 	public int supplierPincode;
 	
@@ -33,6 +43,15 @@ public class SupplierMst {
 	
 	@Column(name="supplier_email")
 	public String supplierEmail;
+	
+	@Column(name="supplier_tin")
+	public String supplierTin;
+	
+	@Column(name="supplier_cst")
+	public String supplierCst;
+	
+	@Column(name="supplier_pan")
+	public String supplierPan;
 	
 	@Column(name="created_user")
 	public String createdUser;
