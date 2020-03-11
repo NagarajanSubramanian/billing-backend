@@ -1,6 +1,5 @@
 package crackers.traders.janani.table;
 
-import java.sql.Date;
 import java.time.ZonedDateTime;
 
 import javax.persistence.Column;

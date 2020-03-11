@@ -1,10 +1,7 @@
 package crackers.traders.janani.entity;
 
-import java.sql.Date;
 import java.time.ZonedDateTime;
 import java.util.UUID;
-
-import javax.persistence.Column;
 
 import lombok.Data;
 
