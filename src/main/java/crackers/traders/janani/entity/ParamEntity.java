@@ -1,6 +1,7 @@
 package crackers.traders.janani.entity;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import lombok.Data;
@@ -52,5 +53,7 @@ public class ParamEntity {
 	public String supplierCst;
 	
 	public String supplierPan;
+	
+	List<String> searchField;
 	
 }

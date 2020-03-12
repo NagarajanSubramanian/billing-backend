@@ -15,8 +15,8 @@ public interface CrackersService {
 
 	Object insertSupplierData(ParamEntity entity);
 
-	List<CatagoryMst> searchCatagoryData(String catagoryName);
+	List<CatagoryMst> searchCatagoryData(String catagoryName, List<String> searchField);
 
-	List<SupplierMst> searchSupplierData(String supplierName);
+	List<SupplierMst> searchSupplierData(String supplierName, List<String> searchField);
 
 }

@@ -7,12 +7,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.annotation.Persistent;
 import org.springframework.stereotype.Service;
 
 import crackers.traders.janani.dao.CatagoryDao;
 import crackers.traders.janani.dao.ProductDao;
 import crackers.traders.janani.dao.SupplierDao;
+import crackers.traders.janani.dao.querydao.QueryDao;
 import crackers.traders.janani.entity.ParamEntity;
 import crackers.traders.janani.table.CatagoryMst;
 import crackers.traders.janani.table.SupplierMst;
@@ -28,6 +33,12 @@ public class CrackersServiceImpl implements CrackersService{
 	
 	@Autowired
 	ProductDao productDao;
+	
+	@PersistenceContext
+	EntityManager entityManager;
+	
+	@Autowired
+	QueryDao queryDao;
 	
 	@Override
 	public Map<String, Object> getAllData() {
@@ -132,12 +143,13 @@ public class CrackersServiceImpl implements CrackersService{
 	}
 
 	@Override
-	public List<CatagoryMst> searchCatagoryData(String catagoryName) {
-		return catagoryDao.searchCatagoryData(catagoryName);
+	public List<CatagoryMst> searchCatagoryData(String catagoryName, List<String> searchField) {
+		return queryDao.searchCatagoryData(catagoryName, searchField);
+//		return catagoryDao.searchCatagoryData(catagoryName);
 	}
 
 	@Override
-	public List<SupplierMst> searchSupplierData(String supplierName) {
-		return supplierDao.searchSupplierData(supplierName);
+	public List<SupplierMst> searchSupplierData(String supplierName, List<String> searchField) {
+		return queryDao.searchSupplierData(supplierName, searchField);
 	}	
 }

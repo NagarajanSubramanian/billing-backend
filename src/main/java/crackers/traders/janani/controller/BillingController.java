@@ -43,12 +43,12 @@ public class BillingController {
 	@RequestMapping("/searchCatgoryData")
 	@ResponseBody
 	public List<CatagoryMst> searchCatgoryData(@RequestBody ParamEntity entity) {
-		return crackerService.searchCatagoryData(entity.getCatagoryName());
+		return crackerService.searchCatagoryData(entity.getCatagoryName(), entity.getSearchField());
 	}
 	
 	@RequestMapping("/searchSupplierData")
 	@ResponseBody
 	public List<SupplierMst> searchSupplierData(@RequestBody ParamEntity entity) {
-		return crackerService.searchSupplierData(entity.getSupplierName());
+		return crackerService.searchSupplierData(entity.getSupplierName(), entity.getSearchField());
 	}
 }
