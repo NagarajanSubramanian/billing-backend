@@ -14,6 +14,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Persistent;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+
 import crackers.traders.janani.dao.CatagoryDao;
 import crackers.traders.janani.dao.ProductDao;
 import crackers.traders.janani.dao.SupplierDao;
@@ -151,5 +154,11 @@ public class CrackersServiceImpl implements CrackersService{
 	@Override
 	public List<SupplierMst> searchSupplierData(String supplierName, List<String> searchField) {
 		return queryDao.searchSupplierData(supplierName, searchField);
-	}	
+	}
+	
+	@Override
+	public Map<String, Object> masterSearch(String catagoryName, List<String> searchField, int offset, int size) throws JsonMappingException, JsonProcessingException {
+		return queryDao.masterSearch(catagoryName, searchField, offset, size);
+//		return catagoryDao.searchCatagoryData(catagoryName);
+	}
 }

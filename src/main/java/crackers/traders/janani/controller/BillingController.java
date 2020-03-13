@@ -1,5 +1,6 @@
 package crackers.traders.janani.controller;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +10,9 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import crackers.traders.janani.entity.ParamEntity;
 import crackers.traders.janani.service.CrackersService;
@@ -50,5 +54,11 @@ public class BillingController {
 	@ResponseBody
 	public List<SupplierMst> searchSupplierData(@RequestBody ParamEntity entity) {
 		return crackerService.searchSupplierData(entity.getSupplierName(), entity.getSearchField());
+	}
+	
+	@RequestMapping("/searchMaster")
+	@ResponseBody
+	public Map<String, Object> searchMaster(@RequestBody ParamEntity entity) throws JsonMappingException, JsonProcessingException {
+		return crackerService.masterSearch(entity.getCatagoryName(), Arrays.asList("catagoryName"), entity.getOffset(), entity.getSize());
 	}
 }

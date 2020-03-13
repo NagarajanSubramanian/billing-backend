@@ -54,6 +54,10 @@ public class ParamEntity {
 	
 	public String supplierPan;
 	
-	List<String> searchField;
+	public List<String> searchField;
+	
+	public int offset;
+	
+	public int size;
 	
 }
