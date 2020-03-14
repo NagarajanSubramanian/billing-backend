@@ -1,6 +1,7 @@
 package crackers.traders.janani.table;
 
 import java.time.ZonedDateTime;
+import java.util.UUID;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -23,10 +24,10 @@ public class ProductMst {
 	public String productName;
 	
 	@Column(name="catagory_id")
-	public String catagoryId;
+	public UUID catagoryId;
 	
 	@Column(name="supplier_id")
-	public String supplierId;
+	public UUID supplierId;
 	
 	@Column(name="product_mrp")
 	public Float productMrp;

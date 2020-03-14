@@ -1,8 +1,15 @@
 package crackers.traders.janani.dao.querydao;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -12,13 +19,10 @@ import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
+import crackers.traders.janani.dao.MasterDefDao;
 import crackers.traders.janani.table.CatagoryMst;
 import crackers.traders.janani.table.SupplierMst;
+import crackers.traders.janani.table.component.MasterDef;
 
 
 public class QueryDaoImpl implements QueryDao{
@@ -28,6 +32,9 @@ public class QueryDaoImpl implements QueryDao{
 
 	@Autowired
 	DataSource source;
+
+	@Autowired
+	MasterDefDao masterDef;
 
 	@Override
 	public List<CatagoryMst> searchCatagoryData(String value, List<String> searchField) {
@@ -39,11 +46,7 @@ public class QueryDaoImpl implements QueryDao{
 		} else {
 			StringBuilder builder = new StringBuilder(catagoryQuery).append(" where ");
 			buildLikeCondition(value, searchField, "catgory", builder);
-			String[] splitedData = value.split(" +");
 			TypedQuery<CatagoryMst> query = entityManager.createQuery(builder.toString(), CatagoryMst.class);
-			for(int valueIncrement=0; valueIncrement<splitedData.length; valueIncrement++) {
-				query.setParameter(valueIncrement, splitedData[valueIncrement]);
-			}
 			return query.getResultList();
 		}
 	}
@@ -58,25 +61,22 @@ public class QueryDaoImpl implements QueryDao{
 		} else {
 			StringBuilder builder = new StringBuilder(supplierQuery).append(" where ");
 			buildLikeCondition(value, searchField, "supply", builder);
-			String[] splitedData = value.split(" +");
 			TypedQuery<SupplierMst> query = entityManager.createQuery(builder.toString(), SupplierMst.class);
-			for(int valueIncrement=0; valueIncrement<splitedData.length; valueIncrement++) {
-				query.setParameter(valueIncrement, splitedData[valueIncrement]);
-			}
 			return query.getResultList();
 		}
 	}
 
 	private void buildLikeCondition(String value, List<String> searchField, String tableShort, StringBuilder builder) {
+		value = StringUtils.isEmpty(value) ? "" : value;
 		String[] splitedData = value.split(" +");
 		for(int valueIncrement=0; valueIncrement<splitedData.length; valueIncrement++) {
 			for(int searchIncrement =0 ; searchIncrement< searchField.size() ; searchIncrement++) {
 				if(searchIncrement == 0) {
-						builder.append(" (lower(cast(").append(tableShort).append(".").append(searchField.get(searchIncrement))
-						.append(" as text)) like concat('%', lower(?").append(valueIncrement).append("), '%')");						
+					builder.append(" (lower(cast(").append(tableShort).append(".").append(searchField.get(searchIncrement))
+					.append(" as text)) like concat('%', lower('").append(splitedData[valueIncrement]).append("'), '%')");						
 				} else {
-						builder.append(" or lower(cast(").append(tableShort).append(".").append(searchField.get(searchIncrement))
-						.append(" as text)) like concat('%', lower(?").append(valueIncrement).append("), '%')");						
+					builder.append(" or lower(cast(").append(tableShort).append(".").append(searchField.get(searchIncrement))
+					.append(" as text)) like concat('%', lower('").append(splitedData[valueIncrement]).append("'), '%')");						
 				}
 			}
 			if(valueIncrement < splitedData.length - 1) {
@@ -86,37 +86,174 @@ public class QueryDaoImpl implements QueryDao{
 			}
 		}
 	}
-	
-	@Override
-	public Map<String, Object> masterSearch(String value, List<String> searchField, int offset, int size) throws JsonMappingException, JsonProcessingException {
-		String catagoryQuery = "select new crackers.traders.janani.table.CatagoryMst(catgory.catagoryId,catgory.catagoryName,"
-				+ "catgory.catagoryShort,catgory.catagoryCommodityCode,catgory.catagoryCst,catgory.catagoryVat,catgory.createdUser,"
-				+ "catgory.createdDate,catgory.updatedUser,catgory.updatedDate) from CatagoryMst catgory";
-		Map<String, Object> returnMap= new HashMap<String, Object>();
-		
-		List<CatagoryMst> result;
-		ObjectMapper oMapper = new ObjectMapper();
-		if(StringUtils.isEmpty(value)) {
-			returnMap.put("count", entityManager.createQuery(catagoryQuery, CatagoryMst.class).getResultList().size());
-			result = entityManager.createQuery(catagoryQuery, CatagoryMst.class).setFirstResult(offset * size).setMaxResults(size).getResultList();
-		} else {
-			StringBuilder builder = new StringBuilder(catagoryQuery).append(" where ");
-			buildLikeCondition(value, searchField, "catgory", builder);
-			String[] splitedData = value.split(" +");
-			TypedQuery<CatagoryMst> query = entityManager.createQuery(builder.toString(), CatagoryMst.class);
-			for(int valueIncrement=0; valueIncrement<splitedData.length; valueIncrement++) {
-				query.setParameter(valueIncrement, splitedData[valueIncrement]);
-			}
-			returnMap.put("count", query.getResultList().size());
-			result = query.setFirstResult(offset).setMaxResults(size * size).getResultList();
 
+	@Override
+	public Map<String, Object> masterSearch(String value,String masterId, int offset, int size, boolean checkCount) throws SQLException {
+
+		Optional<MasterDef> masterData = masterDef.findById(masterId);
+		Map<String, Object> returnMap= new HashMap<String, Object>();
+		if(masterData.isPresent()) {
+			MasterDef masterDataValue = masterData.get();
+			List<String> fetchFled = new ArrayList<>();
+			String[] showField = masterDataValue.getShowFieldIds().split(",");
+			for(String field: showField) {
+				if(!StringUtils.isEmpty(field)) {
+					fetchFled.add(field);	
+				}
+			}
+			String keyField = masterDataValue.getKeyFieldId();
+			String setField = masterDataValue.getNameFieldId();
+			if(!fetchFled.contains(keyField) && !StringUtils.isEmpty(keyField) ) {
+				fetchFled.add(keyField);
+			}
+			if(!fetchFled.contains(setField) && !StringUtils.isEmpty(setField)) {
+				fetchFled.add(setField);
+			}
+			String[] filterField = masterDataValue.getFilterFieldIds().split(",");
+			for(String field: filterField) {
+				if(!fetchFled.contains(field) && !StringUtils.isEmpty(field)) {
+					fetchFled.add(field);
+				}
+			}
+			String tableShort = "master_search";
+			StringBuilder builder = new StringBuilder("Select ");
+			fetchFled.forEach(action -> 
+			builder.append(tableShort).append(".").append(action).append(","));
+			builder.deleteCharAt(builder.toString().length() - 1);
+			builder.append(" from ").append(masterDataValue.getTableName()).append(" ").append(tableShort);
+			List<String> showFieldList = new ArrayList<>();
+			for(String field: showField) {
+				if(!StringUtils.isEmpty(field)) {
+					showFieldList.add(field);	
+				}
+			}
+			if((showField.length > 0 && !StringUtils.isEmpty(value))|| filterField.length > 0) {
+				builder.append(" where ");
+				buildLikeCondition(value,showFieldList, tableShort, builder);
+
+			}
+			Connection connection = source.getConnection();
+			
+			if(checkCount) {
+				PreparedStatement countstatement = connection.prepareStatement(builder.toString(), ResultSet.TYPE_SCROLL_INSENSITIVE, 
+						ResultSet.CONCUR_READ_ONLY);
+				ResultSet countSet = countstatement.executeQuery();
+				countSet.last();
+				returnMap.put("count", countSet.getRow());
+			}
+
+			PreparedStatement statement = connection.prepareStatement(builder.append(" offset ").append(offset * 5).append(" limit ").append(size).toString());
+
+			ResultSetMetaData meta = statement.getMetaData();
+
+			ResultSet resultSet = statement.executeQuery();
+			List<Map<String, String>> listData = new ArrayList<>();
+			while(resultSet.next()){
+				Map<String, String> resultMap = new HashMap<>();
+				for(String showData : showFieldList) {
+					for(int columnIndex=1; columnIndex <= meta.getColumnCount(); columnIndex++) {
+						if(meta.getColumnName(columnIndex).equals(keyField)) {
+							resultMap.put("id", resultSet.getString(columnIndex));
+						} else if(meta.getColumnName(columnIndex).equals(setField)) {
+							resultMap.put("setText", resultSet.getString(columnIndex));
+						} 
+						if(showData.equals(meta.getColumnName(columnIndex))) {
+							resultMap.put(meta.getColumnName(columnIndex), resultSet.getString(columnIndex));
+						}
+					}
+					if(resultMap.containsKey(showData)) {
+						String getData = resultMap.containsKey("name") ? resultMap.get("name") + "  " : "";  
+						resultMap.put("name", getData + resultMap.get(showData));
+						resultMap.remove(showData);
+					}
+				}
+				listData.add(resultMap);
+			}
+			connection.close();
+			returnMap.put("value", listData);
 		}
-		List<Map<String, Object>> resultMap = oMapper.readValue(oMapper.writeValueAsString(result), new TypeReference<List<Map<String, Object>>>() {});
-		resultMap.stream().forEach(data -> {
-			data.put("id", data.get("catagoryId"));
-			data.put("name", data.get("catagoryName"));
-		});
-		returnMap.put("value", resultMap);
+
 		return returnMap;
 	}
+
+	@Override
+	public Map<String, Object> validate(String value, String masterId) throws SQLException {
+		Optional<MasterDef> masterData = masterDef.findById(masterId);
+		Map<String, Object> returnMap= new HashMap<String, Object>();
+		if(masterData.isPresent()) {
+			MasterDef masterDataValue = masterData.get();
+			List<String> fetchFled = new ArrayList<>();
+			String[] showField = masterDataValue.getShowFieldIds().split(",");
+			for(String field: showField) {
+				if(!StringUtils.isEmpty(field)) {
+					fetchFled.add(field);	
+				}
+			}
+			String keyField = masterDataValue.getKeyFieldId();
+			String setField = masterDataValue.getNameFieldId();
+			if(!fetchFled.contains(keyField) && !StringUtils.isEmpty(keyField) ) {
+				fetchFled.add(keyField);
+			}
+			if(!fetchFled.contains(setField) && !StringUtils.isEmpty(setField)) {
+				fetchFled.add(setField);
+			}
+			String[] filterField = masterDataValue.getFilterFieldIds().split(",");
+			for(String field: filterField) {
+				if(!fetchFled.contains(field) && !StringUtils.isEmpty(field)) {
+					fetchFled.add(field);
+				}
+			}
+			String tableShort = "master_search";
+			StringBuilder builder = new StringBuilder("Select ");
+			fetchFled.forEach(action -> 
+			builder.append(tableShort).append(".").append(action).append(","));
+			builder.deleteCharAt(builder.toString().length() - 1);
+			builder.append(" from ").append(masterDataValue.getTableName()).append(" ").append(tableShort);
+			List<String> showFieldList = new ArrayList<>();
+			for(String field: showField) {
+				if(!StringUtils.isEmpty(field)) {
+					showFieldList.add(field);	
+				}
+			}
+			if((showField.length > 0 && !StringUtils.isEmpty(value))|| filterField.length > 0) {
+				builder.append(" where ").append(tableShort).append(".").append(setField).append("='").append(value).append("'");
+				
+
+			}
+			Connection connection = source.getConnection();
+
+			PreparedStatement statement = connection.prepareStatement(builder.toString());
+
+			ResultSetMetaData meta = statement.getMetaData();
+
+			ResultSet resultSet = statement.executeQuery();
+			List<Map<String, String>> listData = new ArrayList<>();
+			if(resultSet.next()){
+				Map<String, String> resultMap = new HashMap<>();
+				for(String showData : showFieldList) {
+					for(int columnIndex=1; columnIndex <= meta.getColumnCount(); columnIndex++) {
+						if(meta.getColumnName(columnIndex).equals(keyField)) {
+							resultMap.put("id", resultSet.getString(columnIndex));
+						} else if(meta.getColumnName(columnIndex).equals(setField)) {
+							resultMap.put("setText", resultSet.getString(columnIndex));
+						} 
+						if(showData.equals(meta.getColumnName(columnIndex))) {
+							resultMap.put(meta.getColumnName(columnIndex), resultSet.getString(columnIndex));
+						}
+					}
+					if(resultMap.containsKey(showData)) {
+						String getData = resultMap.containsKey("name") ? resultMap.get("name") + "  " : "";  
+						resultMap.put("name", getData + resultMap.get(showData));
+						resultMap.remove(showData);
+					}
+				}
+				listData.add(resultMap);
+			}
+			connection.close();
+			returnMap.put("value", listData);
+		}
+
+		return returnMap;
+	}
+
 }

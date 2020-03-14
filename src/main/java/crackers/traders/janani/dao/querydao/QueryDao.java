@@ -1,5 +1,6 @@
 package crackers.traders.janani.dao.querydao;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,8 @@ public interface QueryDao {
 
 	List<SupplierMst> searchSupplierData(String value, List<String> searchField);
 
-	Map<String, Object> masterSearch(String value, List<String> searchField, int offset, int size) throws JsonMappingException, JsonProcessingException;
+	Map<String, Object> masterSearch(String value, String masterId, int offset, int size, boolean checkCount) throws SQLException;
+
+	Map<String, Object> validate(String value, String masterId) throws SQLException;
 
 }

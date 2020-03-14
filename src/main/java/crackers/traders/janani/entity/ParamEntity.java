@@ -4,6 +4,9 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import javax.persistence.Column;
+import javax.persistence.Id;
+
 import lombok.Data;
 
 @Data
@@ -59,5 +62,25 @@ public class ParamEntity {
 	public int offset;
 	
 	public int size;
+	
+	public String masterId;
+	
+	public String searchValue;
+	
+	public boolean checkCount;
+	
+	public String productCode;
+	
+	public String productName;
+	
+	public Float productMrp;
+	
+	public Float productPurchaseRate;
+	
+	public int productMeasurementId;
+	
+	public int productQuantity;
+	
+	public int productQuantityScale;
 	
 }

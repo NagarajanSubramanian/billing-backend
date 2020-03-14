@@ -7,5 +7,7 @@ import crackers.traders.janani.table.ProductMst;
 
 @Repository
 public interface ProductDao extends JpaRepository<ProductMst, String>{
-
+	ProductMst findByProductCodeAndProductName(String productCode, String productName);
+	ProductMst findByProductName(String productName);
+	ProductMst findByProductCode(String productCode);
 }

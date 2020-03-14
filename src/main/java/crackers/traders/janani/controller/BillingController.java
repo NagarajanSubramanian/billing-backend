@@ -1,8 +1,15 @@
 package crackers.traders.janani.controller;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+
+import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -14,10 +21,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
+import crackers.traders.janani.dao.MasterDefDao;
 import crackers.traders.janani.entity.ParamEntity;
 import crackers.traders.janani.service.CrackersService;
 import crackers.traders.janani.table.CatagoryMst;
 import crackers.traders.janani.table.SupplierMst;
+import crackers.traders.janani.table.component.MasterDef;
 
 @CrossOrigin
 @Controller
@@ -26,10 +35,16 @@ public class BillingController {
 	@Autowired
 	CrackersService crackerService;
 	
+	@Autowired
+	MasterDefDao masterDefDao;
+	
+	@Autowired
+	DataSource source;
+	
 
 	@RequestMapping("/getAll")
 	@ResponseBody
-	public Map<String, Object> getAll() {
+	public Map<String, Object> getAll() throws SQLException {
 		return crackerService.getAllData();
 	}
 	@RequestMapping("/insertCatagory")
@@ -42,6 +57,12 @@ public class BillingController {
 	@ResponseBody
 	public Object insertSupplier(@RequestBody ParamEntity entity) {
 			return crackerService.insertSupplierData(entity);
+	}
+	
+	@RequestMapping("/insertProduct")
+	@ResponseBody
+	public Object insertProduct(@RequestBody ParamEntity entity) {
+			return crackerService.insertProduct(entity);
 	}
 	
 	@RequestMapping("/searchCatgoryData")
@@ -58,7 +79,13 @@ public class BillingController {
 	
 	@RequestMapping("/searchMaster")
 	@ResponseBody
-	public Map<String, Object> searchMaster(@RequestBody ParamEntity entity) throws JsonMappingException, JsonProcessingException {
-		return crackerService.masterSearch(entity.getCatagoryName(), Arrays.asList("catagoryName"), entity.getOffset(), entity.getSize());
+	public Map<String, Object> searchMaster(@RequestBody ParamEntity entity) throws SQLException {
+		return crackerService.masterSearch(entity.getSearchValue(), entity.getMasterId(), entity.getOffset(), entity.getSize(), entity.isCheckCount());
+	}
+	
+	@RequestMapping("/validate")
+	@ResponseBody
+	public Map<String, Object> validate(@RequestBody ParamEntity entity) throws SQLException {
+		return crackerService.validate(entity.getSearchValue(), entity.getMasterId());
 	}
 }
