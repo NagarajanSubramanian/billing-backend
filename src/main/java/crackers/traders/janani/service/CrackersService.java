@@ -10,7 +10,7 @@ import crackers.traders.janani.table.SupplierMst;
 
 public interface CrackersService {
 
-	Map<String, Object> getAllData();
+	Map<String, Object> getAllData() throws SQLException;
 
 	Object insertCatagoryData(ParamEntity entity);
 
@@ -24,6 +24,8 @@ public interface CrackersService {
 
 	Map<String, Object> validate(String searchValue, String masterId) throws SQLException;
 
-	Object insertProduct(ParamEntity entity);
+	Object insertProduct(ParamEntity entity) throws SQLException;
+
+	List<Map<String, String>> searchProduct(String catagoryName, List<String> searchField) throws SQLException;
 
 }

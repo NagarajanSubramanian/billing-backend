@@ -2,6 +2,7 @@ package crackers.traders.janani.service;
 
 import java.sql.SQLException;
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,17 +47,18 @@ public class CrackersServiceImpl implements CrackersService{
 	QueryDao queryDao;
 	
 	@Override
-	public Map<String, Object> getAllData() {
+	public Map<String, Object> getAllData() throws SQLException {
 		Map<String, Object> allDataMap = new HashMap<>();
 		allDataMap.put("catagory", catagoryDao.findAll());
 		allDataMap.put("supplier", supplierDao.findAll());
-		allDataMap.put("product", productDao.findAll());
+		allDataMap.put("product",queryDao.loadProductData("", Arrays.asList()));
 		return allDataMap;
 	}
 	
 	@Override
 	public Object insertCatagoryData(ParamEntity entity) {
 		CatagoryMst catagoryEntity = new CatagoryMst();
+		Map<String, Object> returnMap = new HashMap<>();
 		if(entity.getMode().equals("add")) {
 			boolean existFlag = Objects.nonNull(catagoryDao.findByCatagoryName(entity.getCatagoryName()));
 			if(!existFlag) {
@@ -70,10 +72,13 @@ public class CrackersServiceImpl implements CrackersService{
 				catagoryEntity.setUpdatedUser("admin");
 				catagoryEntity.setCreatedDate(ZonedDateTime.now());
 				catagoryEntity.setUpdatedDate(ZonedDateTime.now());
-				catagoryDao.save(catagoryEntity);	
-				return "success";
+				catagoryDao.save(catagoryEntity);
+				returnMap.put("status", "success");
+				returnMap.put("catagory", queryDao.searchCatagoryData(entity.getSearchValue(), entity.getSearchField()));
+				return returnMap;
 			} else {
-				return "exist";
+				returnMap.put("status", "exist");
+				return returnMap;
 			}
 		} if(entity.getMode().equals("edit")) {
 			CatagoryMst catagoryMst = catagoryDao.findByCatagoryId(entity.getCatagoryId());
@@ -86,9 +91,12 @@ public class CrackersServiceImpl implements CrackersService{
 				catagoryMst.setUpdatedUser("admin");
 				catagoryMst.setUpdatedDate(ZonedDateTime.now());
 				catagoryDao.save(catagoryMst);
-				return "success";
+				returnMap.put("status", "success");
+				returnMap.put("catagory", queryDao.searchCatagoryData(entity.getSearchValue(), entity.getSearchField()));
+				return returnMap;
 			} else {
-				return "notexist";
+				returnMap.put("status", "notexist");
+				return returnMap;
 			}
 		} else {
 			return catagoryDao.findByCatagoryId(entity.getCatagoryId());
@@ -97,8 +105,9 @@ public class CrackersServiceImpl implements CrackersService{
 	
 	
 	@Override
-	public Object insertProduct(ParamEntity entity) {
+	public Object insertProduct(ParamEntity entity) throws SQLException {
 		ProductMst productEntity = new ProductMst();
+		Map<String, Object> returnMap = new HashMap<>();
 		if(entity.getMode().equals("add")) {
 			boolean existFlag = Objects.nonNull(productDao.findByProductCodeAndProductName(entity.getProductCode(), entity.getProductName()));
 			if(!existFlag) {
@@ -116,9 +125,12 @@ public class CrackersServiceImpl implements CrackersService{
 				productEntity.setCreatedDate(ZonedDateTime.now());
 				productEntity.setUpdatedDate(ZonedDateTime.now());
 				productDao.save(productEntity);	
-				return "success";
+				returnMap.put("status", "success");
+				returnMap.put("product", queryDao.loadProductData(entity.getSearchValue(), entity.getSearchField()));
+				return returnMap;
 			} else {
-				return "exist";
+				returnMap.put("status", "exist");
+				return returnMap;
 			}
 		} if(entity.getMode().equals("edit")) {
 			ProductMst productMst = productDao.findByProductName(entity.getProductName());
@@ -133,10 +145,13 @@ public class CrackersServiceImpl implements CrackersService{
 				productMst.setProductQuantityScale(entity.getProductQuantityScale());
 				productMst.setUpdatedUser("admin");
 				productMst.setUpdatedDate(ZonedDateTime.now());
-				productDao.save(productMst);	
-				return "success";
+				productDao.save(productMst);
+				returnMap.put("status", "success");
+				returnMap.put("product", queryDao.loadProductData(entity.getSearchValue(), entity.getSearchField()));
+				return returnMap;
 			} else {
-				return "notexist";
+				returnMap.put("status", "notexist");
+				return returnMap;
 			}
 		} else {
 			return productDao.findByProductCode(entity.getProductCode());
@@ -145,10 +160,12 @@ public class CrackersServiceImpl implements CrackersService{
 	
 	@Override
 	public Object insertSupplierData(ParamEntity entity) {
+		Map<String, Object> returnMap = new HashMap<>();
 		if(entity.getMode().equals("add")) {
 			boolean existFlag = Objects.nonNull(supplierDao.findBySupplierName(entity.getSupplierName()));
 			if(existFlag) {
-				return "exist";
+				returnMap.put("status", "exist");
+				return returnMap;
 			} else {
 				SupplierMst supplierMst = new SupplierMst();
 				supplierMst.setSupplierId(UUID.randomUUID());
@@ -167,7 +184,9 @@ public class CrackersServiceImpl implements CrackersService{
 				supplierMst.setUpdatedUser("admin");
 				supplierMst.setUpdatedDate(ZonedDateTime.now());
 				supplierDao.save(supplierMst);
-				return "success";
+				returnMap.put("status", "success");
+				returnMap.put("supplier", queryDao.searchSupplierData(entity.getSearchValue(), entity.getSearchField()));
+				return returnMap;
 			} 
 		} else if(entity.getMode().equals("edit")) {
 			SupplierMst supplierMst = supplierDao.findBySupplierId(entity.getSupplierId());
@@ -185,9 +204,12 @@ public class CrackersServiceImpl implements CrackersService{
 				supplierMst.setUpdatedUser("admin");
 				supplierMst.setUpdatedDate(ZonedDateTime.now());
 				supplierDao.save(supplierMst);
-				return "success";
+				returnMap.put("status", "success");
+				returnMap.put("supplier", queryDao.searchSupplierData(entity.getSearchValue(), entity.getSearchField()));
+				return returnMap;
 			} else {
-				return "notExist";
+				returnMap.put("status", "notexist");
+				return returnMap;
 			}
 		} else {
 			return supplierDao.findBySupplierId(entity.getSupplierId());
@@ -198,6 +220,12 @@ public class CrackersServiceImpl implements CrackersService{
 	@Override
 	public List<CatagoryMst> searchCatagoryData(String catagoryName, List<String> searchField) {
 		return queryDao.searchCatagoryData(catagoryName, searchField);
+//		return catagoryDao.searchCatagoryData(catagoryName);
+	}
+	
+	@Override
+	public List<Map<String, String>> searchProduct(String catagoryName, List<String> searchField) throws SQLException {
+		return queryDao.loadProductData(catagoryName, searchField);
 //		return catagoryDao.searchCatagoryData(catagoryName);
 	}
 

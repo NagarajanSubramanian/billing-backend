@@ -20,4 +20,6 @@ public interface QueryDao {
 
 	Map<String, Object> validate(String value, String masterId) throws SQLException;
 
+	List<Map<String, String>> loadProductData(String searchValue, List<String> searchList) throws SQLException;
+
 }

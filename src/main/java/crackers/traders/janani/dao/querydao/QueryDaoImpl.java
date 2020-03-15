@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -50,6 +51,55 @@ public class QueryDaoImpl implements QueryDao{
 			return query.getResultList();
 		}
 	}
+	
+	@Override
+	public List<Map<String, String>> loadProductData(String searchValue, List<String> column) throws SQLException{
+		String query = "select product.product_code, product.product_name,product.catagory_id,product.supplier_id,product.product_mrp,product.product_purchase_rate\r\n" + 
+				",product.product_measurement_id,product.product_quantity,product.product_quantity_scale, catagory.catagory_name, supplier.supplier_name \r\n" + 
+				"from product_mst product\r\n" + 
+				"left join catagory_mst catagory on catagory.catagory_id=product.catagory_id\r\n" + 
+				"left join supplier_mst supplier on supplier.supplier_id=product.supplier_id";
+		StringBuilder builder = new StringBuilder(query);
+		if(searchValue.trim().length() > 0) {
+			builder.append(" where ");
+			List<String> columnList = column.stream().map(data -> {
+				if(data.equals("supplierName")) {
+					data = "supplier."+ data.replaceAll("([A-Z])", "_$1").toLowerCase();
+				} else if(data.equals("catagoryName")) {
+					data = "catagory."+ data.replaceAll("([A-Z])", "_$1").toLowerCase();
+				} else {
+					data = "product."+ data.replaceAll("([A-Z])", "_$1").toLowerCase();
+				}
+				return data;
+			}).collect(Collectors.toList());
+			buildLikeCondition(searchValue, columnList, "", builder);
+		}
+		Connection connection = source.getConnection();
+		PreparedStatement statement = connection.prepareStatement(builder.toString());
+		ResultSet resultSet = statement.executeQuery();
+		ResultSetMetaData meta = statement.getMetaData();
+		List<Map<String, String>> listData = new ArrayList<>();
+		while(resultSet.next()){
+			Map<String, String> resultMap = new HashMap<>();
+				for(int columnIndex=1; columnIndex <= meta.getColumnCount(); columnIndex++) {
+					String[] metaName = meta.getColumnName(columnIndex).split("_");
+					String resultName = "";
+					for(int index=0;index<metaName.length; index++) {
+						if(index == 0) {
+							resultName = metaName[index];
+						} else {
+							resultName =resultName +  metaName[index].substring(0, 1).toUpperCase() + metaName[index].substring(1);
+						}
+					}
+						resultMap.put(resultName, resultSet.getString(columnIndex));
+				}
+			listData.add(resultMap);
+		}
+		connection.close();
+		
+		return listData;
+		
+	}
 
 	@Override
 	public List<SupplierMst> searchSupplierData(String value, List<String> searchField) {
@@ -72,11 +122,21 @@ public class QueryDaoImpl implements QueryDao{
 		for(int valueIncrement=0; valueIncrement<splitedData.length; valueIncrement++) {
 			for(int searchIncrement =0 ; searchIncrement< searchField.size() ; searchIncrement++) {
 				if(searchIncrement == 0) {
-					builder.append(" (lower(cast(").append(tableShort).append(".").append(searchField.get(searchIncrement))
-					.append(" as text)) like concat('%', lower('").append(splitedData[valueIncrement]).append("'), '%')");						
+					if(tableShort.length() > 0) {
+						builder.append(" (lower(cast(").append(tableShort).append(".").append(searchField.get(searchIncrement))
+						.append(" as text)) like concat('%', lower('").append(splitedData[valueIncrement]).append("'), '%')");
+					} else {
+						builder.append(" (lower(cast(").append(searchField.get(searchIncrement))
+						.append(" as text)) like concat('%', lower('").append(splitedData[valueIncrement]).append("'), '%')");						
+					}
 				} else {
-					builder.append(" or lower(cast(").append(tableShort).append(".").append(searchField.get(searchIncrement))
-					.append(" as text)) like concat('%', lower('").append(splitedData[valueIncrement]).append("'), '%')");						
+					if(tableShort.length() > 0) {
+						builder.append(" or lower(cast(").append(tableShort).append(".").append(searchField.get(searchIncrement))
+						.append(" as text)) like concat('%', lower('").append(splitedData[valueIncrement]).append("'), '%')");						
+					} else {
+						builder.append(" or lower(cast(").append(searchField.get(searchIncrement))
+						.append(" as text)) like concat('%', lower('").append(splitedData[valueIncrement]).append("'), '%')");	
+					}
 				}
 			}
 			if(valueIncrement < splitedData.length - 1) {
@@ -89,7 +149,6 @@ public class QueryDaoImpl implements QueryDao{
 
 	@Override
 	public Map<String, Object> masterSearch(String value,String masterId, int offset, int size, boolean checkCount) throws SQLException {
-
 		Optional<MasterDef> masterData = masterDef.findById(masterId);
 		Map<String, Object> returnMap= new HashMap<String, Object>();
 		if(masterData.isPresent()) {
